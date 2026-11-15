@@ -43,3 +43,6 @@ next-env.d.ts
 # identifiants générés par scripts/seed.mjs
 credentials.local.txt
 !.env.example
+
+.vercel
+.env*
