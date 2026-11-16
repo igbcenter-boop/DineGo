@@ -30,7 +30,7 @@ export function MenuTabs({ items }: { items: { id: string; name: string; count: 
 
   if (!items.length) return null;
   return (
-    <div className="sticky top-16 z-20 -mx-4 border-b border-line/70 bg-canvas/90 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-full sm:border sm:bg-white/85 sm:px-2 sm:py-2 sm:shadow-[var(--shadow-soft)]">
+    <div className="sticky top-[124px] z-20 md:top-[86px] -mx-4 border-b border-line/70 bg-canvas/90 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-full sm:border sm:bg-white/85 sm:px-2 sm:py-2 sm:shadow-[var(--shadow-soft)]">
       <div ref={bar} className="no-scrollbar flex gap-1.5 overflow-x-auto">
         {items.map((i) => (
           <a

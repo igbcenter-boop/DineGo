@@ -4,7 +4,8 @@ import { getProfile, homeFor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LogoHorizontal } from "@/components/Logo";
 import { CartBadge } from "@/components/CartWidgets";
-import { MainNav, MobileTabBar } from "@/components/Nav";
+import { MobileTabBar } from "@/components/Nav";
+import { CityPicker, HeaderSearch, MobileSearchRow } from "@/components/HeaderControls";
 import { signOut } from "@/app/actions/auth";
 
 const SPACE_LABEL: Record<string, string> = {
@@ -16,54 +17,66 @@ const SPACE_LABEL: Record<string, string> = {
 
 export async function Header() {
   const profile = await getProfile();
+  const supabase = await createClient();
   let unread = 0;
   if (profile) {
-    const supabase = await createClient();
     const { count } = await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", false);
     unread = count ?? 0;
   }
+  const { data: zones } = await supabase.from("zones").select("city");
+  const cities = [...new Set((zones ?? []).map((z) => z.city as string))].sort((a, b) => a.localeCompare(b, "fr"));
   const initial = (profile?.full_name || profile?.email || "?").trim().charAt(0).toUpperCase();
   const shopper = !profile || profile.role === "client";
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
-        <div className="container-dg flex h-16 items-center justify-between gap-3">
-          <LogoHorizontal size={36} compact />
-          <MainNav />
-          <div className="flex items-center gap-1.5">
-            {shopper && <CartBadge />}
-            {profile ? (
-              <>
-                <Link href="/notifications" className="btn-icon relative text-violet hover:bg-lilac" aria-label={`Notifications (${unread} non lues)`}>
-                  <Bell className="size-5" aria-hidden />
-                  {unread > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[10px] font-extrabold text-violet-800 ring-2 ring-white">
-                      {unread > 9 ? "9+" : unread}
-                    </span>
-                  )}
-                </Link>
-                <Link href={homeFor(profile.role)} className="hidden items-center gap-2 rounded-full bg-violet py-1 pr-4 pl-1 text-sm font-bold text-white shadow-[var(--shadow-soft)] transition hover:bg-violet-600 sm:inline-flex">
-                  <span className="grid size-8 place-items-center rounded-full bg-orange text-violet-800">{initial}</span>
-                  {SPACE_LABEL[profile.role]}
-                </Link>
-                <form action={signOut}>
-                  <button className="btn-icon text-muted hover:bg-lilac hover:text-violet" type="submit" aria-label="Déconnexion" title="Déconnexion">
-                    <LogOut className="size-5" aria-hidden />
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/connexion" className="btn-ghost btn-sm hidden sm:inline-flex">
-                  Connexion
-                </Link>
-                <Link href="/inscription" className="btn-primary btn-sm">
-                  Inscription
-                </Link>
-              </>
-            )}
+      {/* Barre du haut flottante aux couleurs de la marque */}
+      <header className="sticky top-0 z-40 bg-canvas/85 px-2 pt-2 pb-1 backdrop-blur-xl sm:px-3 sm:pt-3">
+        <div className="mx-auto max-w-[1400px] rounded-[24px] bg-violet px-2.5 py-2 text-white shadow-[var(--shadow-lift)] sm:px-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="shrink-0 rounded-full bg-white/10 py-1 pr-3 pl-1">
+              <LogoHorizontal onDark size={34} />
+            </span>
+            <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">
+              <CityPicker cities={cities} />
+              <HeaderSearch />
+            </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              {shopper && <CartBadge onDark />}
+              {profile ? (
+                <>
+                  <Link href="/notifications" className="btn-icon relative bg-white/10 text-white hover:bg-white/20" aria-label={`Notifications (${unread} non lues)`}>
+                    <Bell className="size-5" aria-hidden />
+                    {unread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[10px] font-extrabold text-violet-800 ring-2 ring-violet">
+                        {unread > 9 ? "9+" : unread}
+                      </span>
+                    )}
+                  </Link>
+                  <Link href={homeFor(profile.role)} className="hidden items-center gap-2 rounded-full bg-white py-1 pr-4 pl-1 text-sm font-bold text-violet transition hover:bg-lilac lg:inline-flex">
+                    <span className="grid size-8 place-items-center rounded-full bg-orange text-violet-800">{initial}</span>
+                    {SPACE_LABEL[profile.role]}
+                  </Link>
+                  <form action={signOut}>
+                    <button className="btn-icon bg-white/10 text-white/80 hover:bg-white/20 hover:text-white" type="submit" aria-label="Déconnexion" title="Déconnexion">
+                      <LogOut className="size-5" aria-hidden />
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/connexion" className="hidden h-10 items-center rounded-full border border-white/40 px-4 text-sm font-bold text-white transition hover:bg-white/10 sm:inline-flex">
+                    Se connecter
+                  </Link>
+                  <Link href="/inscription" className="btn-primary btn-sm">
+                    Inscription
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
+          {/* Mobile : ville + recherche sur une deuxième ligne */}
+          <MobileSearchRow cities={cities} />
         </div>
       </header>
       <MobileTabBar role={profile?.role ?? null} unread={unread} />

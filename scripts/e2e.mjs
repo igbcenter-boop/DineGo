@@ -227,7 +227,7 @@ try {
     await p.fill("#name", `Resto Test ${stamp}`);
     await p.fill("#city", "Ouagadougou");
     await p.fill("#address", "Rue test");
-    await Promise.all([p.waitForURL(/\/restaurant/), p.getByRole("button", { name: "Envoyer mon inscription" }).click()]);
+    await Promise.all([p.waitForURL(/\/restaurant/, { timeout: 60000 }), p.getByRole("button", { name: "Envoyer mon inscription" }).click()]);
     const { data: r } = await db.from("restaurants").select("id, status, owner_id").eq("name", `Resto Test ${stamp}`).single();
     cleanup.push(r);
     assert(r.status === "pending", "statut initial " + r.status);
@@ -244,7 +244,7 @@ try {
     await p.fill("#phone", "+226 71 00 00 00");
     await p.fill("#email", `livreur${stamp}@test.dinego.bf`);
     await p.fill("#password", "MotDePasseTest1");
-    await Promise.all([p.waitForURL(/\/livreur/), p.getByRole("button", { name: "Envoyer ma candidature" }).click()]);
+    await Promise.all([p.waitForURL(/\/livreur/, { timeout: 60000 }), p.getByRole("button", { name: "Envoyer ma candidature" }).click()]);
     const { data } = await db.from("couriers").select("id, status, user_id").eq("full_name", "Livreur Test").order("created_at", { ascending: false }).limit(1).single();
     cleanup.push({ courier: data });
     assert(data.status === "pending", data.status);

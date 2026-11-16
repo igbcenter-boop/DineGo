@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, CalendarDays, ChevronRight, Clock, MapPin, Phone, Star, Store, Tag } from "lucide-react";
+import { Bike, CalendarDays, ChevronRight, Clock, MapPin, Phone, Star, Store } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { LogoHorizontal } from "@/components/Logo";
 import { Banner } from "@/components/Banner";
-import { AddToCart } from "@/components/CartWidgets";
+import { ProductCard } from "@/components/ProductCard";
 import { MenuTabs } from "@/components/MenuTabs";
 import { Cover, Empty, Stars } from "@/components/ui";
-import { PRICE_LEVEL, dateOnly, fcfa, isOpenNow } from "@/lib/format";
+import { PRICE_LEVEL, dateOnly, isOpenNow } from "@/lib/format";
 
 async function load(slug: string) {
   const supabase = await createClient();
@@ -179,45 +179,10 @@ export default async function RestaurantPage(props: PageProps<"/restaurants/[slu
         {groups.map((g) => (
           <section key={g.id} id={`cat-${g.id}`} className="scroll-mt-36">
             <h2 className="h2 mb-4">{g.name}</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              {g.items.map((p) => {
-                const promo = promoByProduct.get(p.id);
-                return (
-                  <article
-                    key={p.id}
-                    id={`p-${p.id}`}
-                    className={`flex scroll-mt-36 gap-4 rounded-3xl bg-white p-3 shadow-[var(--shadow-soft)] ring-1 ring-line/80 transition hover:ring-lilac-300 ${p.available ? "" : "opacity-55"}`}
-                  >
-                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-1 pl-1">
-                      <h3 className="font-bold text-ink">{p.name}</h3>
-                      {p.description && <p className="line-clamp-2 text-xs leading-relaxed text-muted">{p.description}</p>}
-                      {!!p.options?.length && <p className="line-clamp-1 text-[11px] text-violet/60">Options : {p.options.map((o: { name: string }) => o.name).join(", ")}</p>}
-                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                        <span className="price">{fcfa(p.price)}</span>
-                        {promo && (
-                          <span className="badge bg-orange text-violet-800">
-                            <Tag className="size-3" aria-hidden />-{promo.discount_percent}%
-                          </span>
-                        )}
-                        {p.is_combo && <span className="badge bg-lilac text-violet">Menu</span>}
-                      </div>
-                    </div>
-                    <div className="relative shrink-0">
-                      <div className="grid size-28 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-lilac to-peach text-4xl sm:size-32">
-                        {p.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.photo_url} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
-                        ) : (
-                          <span aria-hidden>🍽️</span>
-                        )}
-                      </div>
-                      <div className="absolute -right-1 -bottom-1 flex flex-row-reverse items-center gap-2">
-                        <AddToCart restaurant={resto} product={{ id: p.id, name: p.name, price: p.price, options: p.options ?? [] }} disabled={!p.available || pending} />
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+              {g.items.map((p) => (
+                <ProductCard key={p.id} p={p} restaurant={resto} discount={promoByProduct.get(p.id)?.discount_percent} disabled={pending} />
+              ))}
             </div>
           </section>
         ))}

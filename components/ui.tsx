@@ -167,51 +167,76 @@ export function Cover({
   return morph ? <ViewTransition name={`cover-${r.id}`}>{visual}</ViewTransition> : visual;
 }
 
-export function RestaurantCard({ r, morph = true }: { r: RestaurantCardData; morph?: boolean }) {
+/** Rangée de 5 étoiles avec la note (ou « Nouveau » sans avis). */
+export function StarRow({ value, count }: { value: number; count: number }) {
+  const v = Number(value);
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs" aria-label={count ? `Note ${v.toFixed(1)} sur 5, ${count} avis` : "Pas encore d'avis"}>
+      <span className="flex" aria-hidden>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <Star key={n} className={`size-3.5 ${count && n <= Math.round(v) ? "fill-orange text-orange" : "text-lilac-300"}`} />
+        ))}
+      </span>
+      <span className="font-semibold text-muted">{count ? `${v.toFixed(1).replace(".", ",")}/5` : "Nouveau"}</span>
+    </span>
+  );
+}
+
+/** Carte restaurant façon vitrine : photo, étiquettes, note, lieu et horaires, bouton « Commander chez… ». */
+export function RestaurantCard({ r, morph = true }: { r: RestaurantCardData & { cuisine_type?: string | null }; morph?: boolean }) {
   const open = isOpenNow(r);
   return (
-    <Link href={`/restaurants/${r.slug}`} className="group card-hover block overflow-hidden rounded-3xl border border-line/80 bg-white shadow-[var(--shadow-soft)]">
-      <div className="relative">
+    <Link
+      href={`/restaurants/${r.slug}`}
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl bg-white p-2 shadow-[var(--shadow-soft)] ring-1 ring-line/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
+    >
+      <div className="relative overflow-hidden rounded-[20px]">
         <Cover r={r} morph={morph} className="h-40 transition-transform duration-500 group-hover:scale-[1.03]" />
-        <span className={`badge absolute top-3 left-3 bg-white/95 shadow-sm backdrop-blur ${open ? "text-emerald-700" : "text-red-600"}`}>
+        <span className={`badge absolute top-2.5 left-2.5 bg-white/95 shadow-sm backdrop-blur ${open ? "text-emerald-700" : "text-red-600"}`}>
           <span className={`size-1.5 rounded-full ${open ? "bg-emerald-500" : "bg-red-500"}`} aria-hidden />
           {open ? "Ouvert" : "Fermé"}
         </span>
-        {r.rating_count > 0 && (
-          <span className="badge absolute top-3 right-3 bg-white/95 text-ink shadow-sm backdrop-blur">
-            <Star className="size-3 fill-orange text-orange" aria-hidden />
-            {Number(r.rating_avg).toFixed(1).replace(".", ",")}
-          </span>
-        )}
+        {r.rating_count > 0 && Number(r.rating_avg) >= 4.5 && <span className="badge absolute top-2.5 right-2.5 bg-orange text-violet-800 shadow-sm">★ Mieux noté</span>}
       </div>
-      <div className="space-y-2 p-4">
-        <h3 className="text-[17px] font-extrabold tracking-tight text-violet">{r.name}</h3>
-        <div className="space-y-1 text-xs text-muted">
-          <p className="flex items-center justify-between gap-2">
-            <span className="truncate font-semibold text-violet/70">{r.categories?.name ?? "Restaurant"}</span>
-            <span className="shrink-0 font-bold tracking-wider text-orange-700" title={PRICE_LEVEL[r.price_level]}>
-              {"F".repeat(r.price_level)}
-              <span className="text-orange-700/25">{"F".repeat(3 - r.price_level)}</span>
-              <span className="sr-only"> {PRICE_LEVEL[r.price_level]}</span>
-            </span>
-          </p>
-          <p className="flex items-center gap-1 truncate">
-            <MapPin className="size-3.5 shrink-0" aria-hidden />
+      <div className="flex flex-1 flex-col gap-2 px-2 pt-3 pb-1">
+        <h3 className="truncate text-[17px] font-extrabold tracking-tight text-ink">{r.name}</h3>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="chip bg-lilac/70 py-1 font-medium">
+            <span aria-hidden>{r.categories?.icon ?? "🍽️"}</span> {r.categories?.name ?? "Restaurant"}
+          </span>
+          {r.cuisine_type && <span className="chip max-w-full truncate bg-cream py-1 font-medium text-orange-700">{r.cuisine_type}</span>}
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <StarRow value={r.rating_avg} count={r.rating_count} />
+          <span className="text-xs font-bold tracking-wider text-orange-700" title={PRICE_LEVEL[r.price_level]}>
+            {"F".repeat(r.price_level)}
+            <span className="text-orange-700/25">{"F".repeat(3 - r.price_level)}</span>
+            <span className="sr-only"> {PRICE_LEVEL[r.price_level]}</span>
+          </span>
+        </div>
+        <div className="space-y-1 rounded-2xl bg-canvas px-3 py-2 text-xs text-ink/80">
+          <p className="flex items-center gap-1.5 truncate">
+            <MapPin className="size-3.5 shrink-0 text-violet" aria-hidden />
             {r.zones?.name ? `${r.zones.name}, ` : ""}
             {r.city}
           </p>
+          <p className="flex items-center gap-1.5 truncate">
+            {r.offers_delivery ? <Bike className="size-3.5 shrink-0 text-violet" aria-hidden /> : <Store className="size-3.5 shrink-0 text-violet" aria-hidden />}
+            {[r.offers_delivery && "Livraison", r.offers_pickup && "Retrait"].filter(Boolean).join(" · ")}
+            {r.opens_at && r.closes_at && (
+              <span className="ml-auto inline-flex items-center gap-1 text-muted">
+                <Clock className="size-3.5" aria-hidden />
+                {r.opens_at.slice(0, 5)}–{r.closes_at.slice(0, 5)}
+              </span>
+            )}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-1.5 pt-0.5">
-          {r.offers_delivery && (
-            <span className="chip py-1"><Bike className="size-3.5" aria-hidden /> Livraison</span>
-          )}
-          {r.offers_pickup && (
-            <span className="chip bg-cream py-1 text-orange-700"><Store className="size-3.5" aria-hidden /> Retrait sur place</span>
-          )}
-          {r.opens_at && r.closes_at && (
-            <span className="chip bg-transparent px-1 py-1 text-muted"><Clock className="size-3.5" aria-hidden /> {r.opens_at.slice(0, 5)}–{r.closes_at.slice(0, 5)}</span>
-          )}
-        </div>
+        <span className="mt-auto flex items-center justify-center gap-2 rounded-2xl bg-orange px-3 py-2.5 text-sm font-semibold text-violet-800 transition-colors group-hover:bg-orange-500">
+          <Store className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">
+            Commander chez <span className="font-extrabold">{r.name}</span>
+          </span>
+        </span>
       </div>
     </Link>
   );

@@ -23,14 +23,18 @@ function usePop(value: number) {
   return pop;
 }
 
-export function CartBadge() {
+export function CartBadge({ onDark = false }: { onDark?: boolean }) {
   const { count } = useCart();
   const pop = usePop(count);
   return (
-    <Link href="/panier" className="btn-icon relative hidden text-violet hover:bg-lilac md:inline-grid" aria-label={`Panier (${count} article${count > 1 ? "s" : ""})`}>
+    <Link
+      href="/panier"
+      className={`btn-icon relative hidden md:inline-grid ${onDark ? "bg-white/10 text-white hover:bg-white/20" : "text-violet hover:bg-lilac"}`}
+      aria-label={`Panier (${count} article${count > 1 ? "s" : ""})`}
+    >
       <ShoppingBag className="size-5" aria-hidden />
       {count > 0 && (
-        <span className={`absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[10px] font-extrabold text-violet-800 ring-2 ring-white ${pop ? "animate-pop" : ""}`}>
+        <span className={`absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[10px] font-extrabold text-violet-800 ring-2 ${onDark ? "ring-violet" : "ring-white"} ${pop ? "animate-pop" : ""}`}>
           {count}
         </span>
       )}
@@ -48,7 +52,7 @@ export function CartBar() {
   if (!ready || !count || !cart.restaurant) return null;
   if (HIDE_BAR.some((p) => path === p || path.startsWith(p + "/"))) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex justify-center px-3 md:right-6 md:bottom-6 md:left-auto md:justify-end">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex justify-center px-3 md:right-24 md:bottom-6 md:left-auto md:justify-end">
       <Link
         href="/panier"
         className={`animate-slide-up pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full bg-violet-800 py-2 pr-2 pl-2 text-white shadow-[var(--shadow-lift)] ring-1 ring-white/10 transition hover:bg-violet-700 md:w-auto ${pop ? "[&>span:first-child]:animate-pop" : ""}`}

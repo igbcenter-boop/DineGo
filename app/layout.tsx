@@ -5,6 +5,9 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart";
 import { Footer, Header } from "@/components/Header";
 import { CartBar } from "@/components/CartWidgets";
+import { AppShell } from "@/components/AppShell";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { createClient } from "@/lib/supabase/server";
 
 // Typographie officielle (§26.3) : Montserrat ExtraBold pour titres, Medium/Regular pour les textes
 const montserrat = Montserrat({
@@ -25,16 +28,21 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const supabase = await createClient();
+  const { data: categories } = await supabase.from("categories").select("name, slug, icon").order("sort");
   return (
     <html lang="fr" className={`${montserrat.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <CartProvider>
           <Header />
           <ViewTransition>
-            <main className="flex-1 pb-24 md:pb-0">{children}</main>
+            <main className="flex-1 pb-24 md:pb-0">
+              <AppShell categories={categories ?? []}>{children}</AppShell>
+            </main>
           </ViewTransition>
           <CartBar />
+          <WhatsAppButton />
           <Footer />
         </CartProvider>
       </body>

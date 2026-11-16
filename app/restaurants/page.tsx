@@ -186,7 +186,7 @@ export default async function RestaurantsPage(props: PageProps<"/restaurants">) 
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="hidden lg:block">
             <div className="card sticky top-24">
               <p className="mb-4 flex items-center gap-2 font-bold text-violet">
@@ -219,7 +219,7 @@ export default async function RestaurantsPage(props: PageProps<"/restaurants">) 
               )}
             </div>
             {list.length ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {list.map((r, i) => (
                   <div key={r.id} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                     <RestaurantCard r={r} />
