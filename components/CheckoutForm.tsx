@@ -53,12 +53,12 @@ export function CheckoutForm({ addresses, zones, defaultPhone }: { addresses: Ad
       <input type="hidden" name="cart" value={cartJson} />
       <div className="space-y-6">
         <fieldset className="card space-y-3">
-          <legend className="h3">Livraison ou retrait</legend>
+          <legend className="h3 mb-1 text-lg">Livraison ou retrait</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {(["delivery", "pickup"] as const).map((m) => {
               const disabled = r ? (m === "delivery" ? !r.offers_delivery : !r.offers_pickup) : false;
               return (
-                <label key={m} className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 ${mode === m ? "border-orange bg-cream" : "border-line"} ${disabled ? "opacity-50" : ""}`}>
+                <label key={m} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition-all ${mode === m ? "border-orange bg-cream shadow-[var(--shadow-soft)]" : "border-line bg-white hover:border-lilac-300"} ${disabled ? "opacity-50" : ""}`}>
                   <input type="radio" name="mode" value={m} checked={mode === m} disabled={disabled} onChange={() => setMode(m)} />
                   <span>
                     <span className="block font-bold text-violet">{m === "delivery" ? "🛵 Livraison" : "🏪 Retrait sur place"}</span>
@@ -72,7 +72,7 @@ export function CheckoutForm({ addresses, zones, defaultPhone }: { addresses: Ad
 
         {mode === "delivery" && (
           <fieldset className="card space-y-3">
-            <legend className="h3">Adresse de livraison</legend>
+            <legend className="h3 mb-1 text-lg">Adresse de livraison</legend>
             {addresses.map((a) => (
               <label key={a.id} className="flex items-start gap-2 text-sm">
                 <input type="radio" name="address_id" value={a.id} checked={addressId === a.id} onChange={() => setAddressId(a.id)} />
@@ -114,7 +114,7 @@ export function CheckoutForm({ addresses, zones, defaultPhone }: { addresses: Ad
         )}
 
         <fieldset className="card space-y-3">
-          <legend className="h3">Contact et instructions</legend>
+          <legend className="h3 mb-1 text-lg">Contact et instructions</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label" htmlFor="contact_phone">Téléphone</label>
@@ -134,9 +134,9 @@ export function CheckoutForm({ addresses, zones, defaultPhone }: { addresses: Ad
         </fieldset>
 
         <fieldset className="card space-y-2">
-          <legend className="h3">Moyen de paiement</legend>
+          <legend className="h3 mb-1 text-lg">Moyen de paiement</legend>
           {Object.entries(PAYMENT_METHOD).map(([k, label]) => (
-            <label key={k} className={`flex items-center gap-3 rounded-xl border-2 p-3 text-sm ${method === k ? "border-orange bg-cream" : "border-line"}`}>
+            <label key={k} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-sm transition-all ${method === k ? "border-orange bg-cream shadow-[var(--shadow-soft)]" : "border-line bg-white hover:border-lilac-300"}`}>
               <input type="radio" name="payment_method" value={k} checked={method === k} onChange={() => setMethod(k)} />
               <span className="font-semibold">
                 {k === "cash" ? (mode === "delivery" ? "Espèces à la livraison" : "Espèces au retrait") : label}
@@ -151,7 +151,7 @@ export function CheckoutForm({ addresses, zones, defaultPhone }: { addresses: Ad
         </fieldset>
       </div>
 
-      <aside className="card h-fit space-y-3 lg:sticky lg:top-24">
+      <aside className="card h-fit space-y-4 lg:sticky lg:top-24">
         <h2 className="h3">{cart.restaurant.name}</h2>
         <ul className="space-y-1 text-sm">
           {cart.items.map((i) => (

@@ -72,27 +72,28 @@ try {
   const client = await session();
   await check("1-4. Consultation sans compte, recherche, menu", async () => {
     await client.goto(`${BASE}/restaurants?q=bissap`);
-    assert(await client.getByText("Le Maquis du Faso").first().isVisible(), "recherche par plat sans résultat");
+    await client.getByText("Le Maquis du Faso").first().waitFor({ timeout: 20000 });
     await client.goto(`${BASE}/restaurants/le-maquis-du-faso`);
-    assert(await client.getByRole("heading", { name: "Riz gras" }).isVisible(), "menu non affiché");
+    await client.getByRole("heading", { name: "Riz gras" }).waitFor({ timeout: 20000 });
   });
   await check("5. Ajout au panier avec option", async () => {
     const riz = client.locator("article").filter({ has: client.getByRole("heading", { name: "Riz gras" }) });
-    await riz.getByRole("button", { name: "+ Ajouter" }).click();
-    await riz.getByLabel("Œuf").check();
-    await riz.getByRole("button", { name: /^Ajouter ·/ }).click();
+    await riz.getByRole("button", { name: "Ajouter Riz gras" }).click();
+    const sheet = client.getByRole("dialog", { name: "Riz gras" });
+    await sheet.getByLabel("Œuf").check();
+    await sheet.getByRole("button", { name: /^Ajouter au panier/ }).click();
     const bissap = client.locator("article").filter({ has: client.getByRole("heading", { name: "Jus de bissap" }) });
-    await bissap.getByRole("button", { name: "+ Ajouter" }).click();
+    await bissap.getByRole("button", { name: "Ajouter Jus de bissap" }).click();
     await client.getByText("Ajouté au panier ✓").first().waitFor();
   });
   await check("6. Panier multi-restaurants empêché", async () => {
     await client.goto(`${BASE}/restaurants/grill-wend-kuuni`);
     const soupe = client.locator("article").filter({ has: client.getByRole("heading", { name: "Soupe de mouton" }) });
-    await soupe.getByRole("button", { name: "+ Ajouter" }).click();
+    await soupe.getByRole("button", { name: "Ajouter Soupe de mouton" }).click();
     await client.getByText("Une commande ne peut concerner qu'un seul restaurant").waitFor();
     await client.getByRole("button", { name: "Garder mon panier" }).click();
     await client.goto(`${BASE}/panier`);
-    assert(await client.getByRole("heading", { name: "Le Maquis du Faso" }).isVisible(), "panier modifié");
+    await client.getByRole("heading", { name: "Le Maquis du Faso" }).waitFor({ timeout: 20000 });
   });
 
   let orderA = { id: "", code: "" };
@@ -148,7 +149,7 @@ try {
   });
   await check("32. Rémunération du livreur", async () => {
     await courier.goto(`${BASE}/livreur/remunerations`);
-    assert(await courier.getByRole("cell", { name: orderA.code }).first().isVisible(), "rémunération absente");
+    await courier.getByRole("cell", { name: orderA.code }).first().waitFor({ timeout: 20000 });
     const { data } = await db.from("courier_earnings").select("amount, paid_by").eq("order_id", orderA.id).single();
     assert(data.amount === 500 && data.paid_by === "dinego", JSON.stringify(data));
   });
@@ -160,7 +161,7 @@ try {
   });
   await check("14. Historique client", async () => {
     await client.goto(`${BASE}/compte`);
-    assert(await client.getByText(orderA.code).first().isVisible(), "commande absente");
+    await client.getByText(orderA.code).first().waitFor({ timeout: 20000 });
   });
   await check("33, 35. Ventilation calculée, visible par le restaurant", async () => {
     const { data: f } = await db.from("order_financials").select("*").eq("order_id", orderA.id).single();
@@ -176,8 +177,8 @@ try {
   await check("10-11. Retrait et paiement numérique", async () => {
     await client.goto(`${BASE}/restaurants/grill-wend-kuuni`);
     const b = client.locator("article").filter({ has: client.getByRole("heading", { name: "Brochettes de bœuf (x5)" }) });
-    await b.getByRole("button", { name: "+ Ajouter" }).click();
-    await b.getByRole("button", { name: /^Ajouter ·/ }).click();
+    await b.getByRole("button", { name: "Ajouter Brochettes de bœuf (x5)" }).click();
+    await client.getByRole("dialog").getByRole("button", { name: /^Ajouter au panier/ }).click();
     await client.getByText("Ajouté au panier ✓").first().waitFor();
     await client.goto(`${BASE}/commande`);
     await client.locator("input[name=mode][value=pickup]").check();
@@ -210,7 +211,7 @@ try {
     const { data: st } = await db.from("settlements").select("*").eq("id", f.settlement_id).single();
     assert(st.direction === "to_dinego" && st.frequency === "daily" && st.amount_due >= f.dinego_share, JSON.stringify(st));
     assert(st.status === "late", "retard non détecté : " + st.status);
-    assert(await grill.getByText("En retard").first().isVisible(), "retard non affiché");
+    await grill.getByText("En retard").first().waitFor({ timeout: 20000 });
   });
 
   console.log("\n▶ Inscriptions et administration");
@@ -251,18 +252,21 @@ try {
   });
   await check("36, 46. Ventilation complète et réconciliation (admin)", async () => {
     await admin.goto(`${BASE}/admin/commandes?code=${orderA.code}`);
+    await admin.getByText("210 FCFA").first().waitFor({ timeout: 20000 });
     const text = await admin.locator("main").innerText();
     assert(text.includes("Restaurant") && text.includes("1 890 FCFA") && text.includes("210 FCFA"), "ventilation admin incomplète");
     await admin.goto(`${BASE}/admin/finances`);
-    assert(await admin.getByRole("heading", { name: "Réconciliation financière" }).isVisible(), "réconciliation absente");
+    await admin.getByRole("heading", { name: "Réconciliation financière" }).waitFor({ timeout: 20000 });
   });
   await check("Accès refusés selon le rôle", async () => {
     await client.goto(`${BASE}/admin`);
-    assert(!client.url().includes("/admin"), "client a accédé à /admin");
+    await client.waitForURL((u) => !u.pathname.startsWith("/admin"), { timeout: 20000 });
     await courier.goto(`${BASE}/restaurant/finances`);
-    assert(!courier.url().includes("/restaurant/finances"), "livreur a accédé aux finances restaurant");
+    await courier.waitForURL((u) => !u.pathname.startsWith("/restaurant"), { timeout: 20000 });
+    assert(!(await courier.getByText("Historique des opérations").count()), "livreur a vu les finances restaurant");
     const { data: other } = await db.from("orders").select("id").eq("id", orderA.id).single();
     await grill.goto(`${BASE}/compte/commandes/${other.id}`);
+    await grill.waitForURL((u) => !u.pathname.startsWith("/compte/commandes"), { timeout: 20000 }).catch(() => {});
     assert(!grill.url().includes(`/compte/commandes/${other.id}`) || (await grill.getByText("Page introuvable").isVisible()), "restaurant a vu la commande d'un client");
   });
   await check("47-49. Logo et bannières sur ordinateur et smartphone", async () => {
@@ -270,7 +274,7 @@ try {
     const mp = await m.newPage();
     for (const path of ["/", "/restaurants", "/promotions", "/aide", "/connexion"]) {
       await mp.goto(BASE + path);
-      assert(await mp.getByRole("img", { name: "DineGo" }).first().isVisible(), `logo absent sur ${path}`);
+      await mp.getByRole("img", { name: "DineGo" }).first().waitFor({ timeout: 20000 });
       const overflow = await mp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
       assert(!overflow, `débordement horizontal sur ${path} (mobile)`);
     }

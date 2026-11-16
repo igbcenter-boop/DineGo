@@ -1,23 +1,22 @@
-import { SpaceNav } from "@/components/SpaceNav";
+import { SpaceShell } from "@/components/SpaceNav";
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <>
-      <SpaceNav
-        title="Administration"
-        items={[
-          { href: "/admin", label: "Pilotage" },
-          { href: "/admin/restaurants", label: "Restaurants" },
-          { href: "/admin/livreurs", label: "Livreurs" },
-          { href: "/admin/utilisateurs", label: "Utilisateurs" },
-          { href: "/admin/commandes", label: "Commandes" },
-          { href: "/admin/finances", label: "Finances" },
-          { href: "/admin/encaissements", label: "Encaissements" },
-          { href: "/admin/reclamations", label: "Réclamations" },
-          { href: "/admin/parametres", label: "Paramètres" },
-        ]}
-      />
+    <SpaceShell
+      title="Administration"
+      items={[
+        { href: "/admin", label: "Pilotage", icon: "dashboard" },
+        { href: "/admin/restaurants", label: "Restaurants", icon: "store" },
+        { href: "/admin/livreurs", label: "Livreurs", icon: "couriers" },
+        { href: "/admin/utilisateurs", label: "Utilisateurs", icon: "users" },
+        { href: "/admin/commandes", label: "Commandes", icon: "orders" },
+        { href: "/admin/finances", label: "Finances", icon: "finance" },
+        { href: "/admin/encaissements", label: "Encaissements", icon: "cash" },
+        { href: "/admin/reclamations", label: "Réclamations", icon: "help" },
+        { href: "/admin/parametres", label: "Paramètres", icon: "settings" },
+      ]}
+    >
       {children}
-    </>
+    </SpaceShell>
   );
 }

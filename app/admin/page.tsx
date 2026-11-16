@@ -94,7 +94,7 @@ export default async function AdminHome(props: PageProps<"/admin">) {
             <Kpi label="Valeur totale des commandes" value={fcfa(O.reduce((a, o) => a + o.total, 0))} />
             <Kpi label="Clients" value={clients.count ?? 0} />
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <Breakdown title="Par restaurant" rows={group((o) => byId.get(o.restaurant_id)?.name ?? "—")} />
             <Breakdown title="Par ville" rows={group((o) => byId.get(o.restaurant_id)?.city ?? "—")} />
             <Breakdown title="Par catégorie" rows={group((o) => (byId.get(o.restaurant_id)?.categories as unknown as { name: string } | null)?.name ?? "—")} />

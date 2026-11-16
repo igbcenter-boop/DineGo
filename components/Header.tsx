@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { Bell, LogOut } from "lucide-react";
 import { getProfile, homeFor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LogoHorizontal } from "@/components/Logo";
 import { CartBadge } from "@/components/CartWidgets";
+import { MainNav, MobileTabBar } from "@/components/Nav";
 import { signOut } from "@/app/actions/auth";
+
+const SPACE_LABEL: Record<string, string> = {
+  client: "Mon compte",
+  restaurant: "Espace restaurant",
+  livreur: "Espace livreur",
+  admin: "Administration",
+};
 
 export async function Header() {
   const profile = await getProfile();
@@ -13,115 +22,86 @@ export async function Header() {
     const { count } = await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", false);
     unread = count ?? 0;
   }
-  const spaceLabel: Record<string, string> = {
-    client: "Mon compte",
-    restaurant: "Espace restaurant",
-    livreur: "Espace livreur",
-    admin: "Administration",
-  };
+  const initial = (profile?.full_name || profile?.email || "?").trim().charAt(0).toUpperCase();
+  const shopper = !profile || profile.role === "client";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
-      <div className="container-dg flex h-16 items-center justify-between gap-3">
-        <LogoHorizontal size={34} compact />
-        <nav aria-label="Navigation principale" className="hidden items-center gap-1 md:flex">
-          <Link href="/restaurants" className="btn-ghost">
-            Restaurants
-          </Link>
-          <Link href="/promotions" className="btn-ghost">
-            Promotions
-          </Link>
-          <Link href="/aide" className="btn-ghost">
-            Aide
-          </Link>
-        </nav>
-        <div className="flex items-center gap-1">
-          {(!profile || profile.role === "client") && <CartBadge />}
-          {profile ? (
-            <>
-              <Link href="/notifications" className="relative rounded-xl px-2 py-2 text-violet hover:bg-lilac" aria-label={`Notifications (${unread} non lues)`}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" />
-                  <path d="M10 20a2 2 0 0 0 4 0" />
-                </svg>
-                {unread > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[11px] font-extrabold text-violet-700">
-                    {unread > 9 ? "9+" : unread}
-                  </span>
-                )}
-              </Link>
-              <Link href={homeFor(profile.role)} className="btn-violet btn-sm">
-                <span className="sm:hidden">Mon espace</span>
-                <span className="hidden sm:inline">{spaceLabel[profile.role]}</span>
-              </Link>
-              <form action={signOut}>
-                <button className="btn-ghost btn-sm" type="submit" aria-label="Déconnexion">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="sm:hidden">
-                    <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
-                  </svg>
-                  <span className="hidden sm:inline">Déconnexion</span>
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <Link href="/connexion" className="btn-ghost btn-sm">
-                Connexion
-              </Link>
-              <Link href="/inscription" className="btn-primary btn-sm">
-                Inscription
-              </Link>
-            </>
-          )}
+    <>
+      <header className="sticky top-0 z-40 border-b border-line/70 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+        <div className="container-dg flex h-16 items-center justify-between gap-3">
+          <LogoHorizontal size={36} compact />
+          <MainNav />
+          <div className="flex items-center gap-1.5">
+            {shopper && <CartBadge />}
+            {profile ? (
+              <>
+                <Link href="/notifications" className="btn-icon relative text-violet hover:bg-lilac" aria-label={`Notifications (${unread} non lues)`}>
+                  <Bell className="size-5" aria-hidden />
+                  {unread > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-orange px-1 text-[10px] font-extrabold text-violet-800 ring-2 ring-white">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                </Link>
+                <Link href={homeFor(profile.role)} className="hidden items-center gap-2 rounded-full bg-violet py-1 pr-4 pl-1 text-sm font-bold text-white shadow-[var(--shadow-soft)] transition hover:bg-violet-600 sm:inline-flex">
+                  <span className="grid size-8 place-items-center rounded-full bg-orange text-violet-800">{initial}</span>
+                  {SPACE_LABEL[profile.role]}
+                </Link>
+                <form action={signOut}>
+                  <button className="btn-icon text-muted hover:bg-lilac hover:text-violet" type="submit" aria-label="Déconnexion" title="Déconnexion">
+                    <LogOut className="size-5" aria-hidden />
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link href="/connexion" className="btn-ghost btn-sm hidden sm:inline-flex">
+                  Connexion
+                </Link>
+                <Link href="/inscription" className="btn-primary btn-sm">
+                  Inscription
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      <nav aria-label="Navigation mobile" className="flex gap-1 overflow-x-auto border-t border-line px-4 py-1 md:hidden">
-        <Link href="/restaurants" className="btn-ghost btn-sm">
-          Restaurants
-        </Link>
-        <Link href="/promotions" className="btn-ghost btn-sm">
-          Promotions
-        </Link>
-        <Link href="/aide" className="btn-ghost btn-sm">
-          Aide
-        </Link>
-      </nav>
-    </header>
+      </header>
+      <MobileTabBar role={profile?.role ?? null} unread={unread} />
+    </>
   );
 }
 
 export function Footer() {
   return (
-    <footer className="mt-16 bg-violet text-white">
-      <div className="container-dg grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-3">
-          <LogoHorizontal onDark slogan size={40} />
-          <p className="text-sm text-white/80">La marketplace nationale de restauration et de livraison du Burkina Faso.</p>
+    <footer className="relative mt-20 overflow-hidden bg-violet-800 pb-24 text-white md:pb-0">
+      <div className="pattern-dots absolute inset-0 opacity-60" aria-hidden />
+      <div className="absolute -top-24 -right-24 size-72 rounded-full bg-orange/20 blur-3xl" aria-hidden />
+      <div className="container-dg relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="space-y-4">
+          <LogoHorizontal onDark slogan size={44} />
+          <p className="max-w-xs text-sm text-white/75">La marketplace nationale de restauration et de livraison du Burkina Faso.</p>
+          <p className="text-xs text-white/50">Orange Money · Moov Money · Espèces</p>
         </div>
-        <div>
-          <p className="mb-2 font-bold">Commander</p>
-          <ul className="space-y-1 text-sm text-white/85">
-            <li><Link href="/restaurants" className="hover:underline">Tous les restaurants</Link></li>
-            <li><Link href="/promotions" className="hover:underline">Promotions</Link></li>
-            <li><Link href="/reservation" className="hover:underline">Réserver une table</Link></li>
-          </ul>
-        </div>
-        <div>
-          <p className="mb-2 font-bold">Partenaires</p>
-          <ul className="space-y-1 text-sm text-white/85">
-            <li><Link href="/devenir-partenaire" className="hover:underline">Devenir restaurant partenaire</Link></li>
-            <li><Link href="/devenir-livreur" className="hover:underline">Devenir livreur</Link></li>
-          </ul>
-        </div>
-        <div>
-          <p className="mb-2 font-bold">Assistance</p>
-          <ul className="space-y-1 text-sm text-white/85">
-            <li><Link href="/aide" className="hover:underline">Aide et réclamations</Link></li>
-            <li><Link href="/connexion" className="hover:underline">Connexion</Link></li>
-          </ul>
-        </div>
+        {[
+          ["Commander", [["/restaurants", "Tous les restaurants"], ["/promotions", "Promotions"], ["/reservation", "Réserver une table"]]],
+          ["Partenaires", [["/devenir-partenaire", "Devenir restaurant partenaire"], ["/devenir-livreur", "Devenir livreur"]]],
+          ["Assistance", [["/aide", "Aide et réclamations"], ["/connexion", "Connexion"], ["/inscription", "Créer un compte"]]],
+        ].map(([title, links]) => (
+          <div key={title as string}>
+            <p className="mb-3 text-sm font-bold">{title as string}</p>
+            <ul className="space-y-2 text-sm text-white/75">
+              {(links as string[][]).map(([href, label]) => (
+                <li key={href}>
+                  <Link href={href} className="transition hover:text-orange">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-      <p className="border-t border-white/15 py-4 text-center text-xs font-semibold tracking-[0.2em] text-white/70">
+      <p className="relative border-t border-white/10 py-5 text-center text-[11px] font-semibold tracking-[0.25em] text-white/60">
         DINEGO — CHOISISSEZ. COMMANDEZ. SAVOUREZ.
       </p>
     </footer>

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
+import { ViewTransition } from "react";
 import "./globals.css";
 import { CartProvider } from "@/components/cart";
 import { Footer, Header } from "@/components/Header";
+import { CartBar } from "@/components/CartWidgets";
 
 // Typographie officielle (§26.3) : Montserrat ExtraBold pour titres, Medium/Regular pour les textes
 const montserrat = Montserrat({
@@ -15,10 +17,12 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: { default: "DineGo — Choisissez. Commandez. Savourez.", template: "%s · DineGo" },
   description: "La marketplace nationale de restauration et de livraison du Burkina Faso : découvrez les restaurants, commandez et faites-vous livrer.",
+  appleWebApp: { title: "DineGo", capable: true, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#4B176D",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -27,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <CartProvider>
           <Header />
-          <main className="flex-1">{children}</main>
+          <ViewTransition>
+            <main className="flex-1 pb-24 md:pb-0">{children}</main>
+          </ViewTransition>
+          <CartBar />
           <Footer />
         </CartProvider>
       </body>
